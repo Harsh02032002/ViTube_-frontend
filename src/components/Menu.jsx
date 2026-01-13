@@ -117,11 +117,7 @@ const Menu = ({ darkMode, setDarkMode, type }) => {
             <IoCompassOutline size={22} /> Explore
           </Item>
         </Link>
-        <Link to="/trends" style={{ textDecoration: "none", color: "inherit" }}>
-          <Item className={location.pathname === "/trends" ? "active" : ""}>
-            <IoFlameOutline size={22} /> Trending
-          </Item>
-        </Link>
+        
         <Link to="/subscriptions" style={{ textDecoration: "none", color: "inherit" }}>
           <Item className={location.pathname === "/subscriptions" ? "active" : ""}>
             <IoCheckmarkDoneOutline size={22} /> Subscriptions
