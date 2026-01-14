@@ -91,7 +91,7 @@ const Connect = () => {
             setMessageEmptyError(true);
             setTimeout(() => setMessageEmptyError(false), 3000);
         } else {
-            let number = 8769506494;
+            let number = 9464165010;
 
             let url = `${URL}?phone=${number}`;
 

@@ -1,7 +1,7 @@
-import axios from 'axios';
-export const fetchComments = async(videoId, setComments) => {
-    try {
-        const res = await axios.get(`/comments/${videoId}`);
-        setComments(res.data);
-    } catch (err) {}
+import api from "./utils/api";
+export const fetchComments = async (videoId, setComments) => {
+  try {
+    const res = await api.get(`/comments/${videoId}`);
+    setComments(res.data);
+  } catch (err) {}
 };

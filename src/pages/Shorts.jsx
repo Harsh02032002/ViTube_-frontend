@@ -1,13 +1,18 @@
 import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import api from "../utils/api";
-
 import {
   MdThumbUp,
   MdThumbDown,
   MdOutlineAddTask,
+  MdPlayArrow,
+  MdPause,
 } from "react-icons/md";
-import { IoArrowRedoOutline, IoChevronUpOutline, IoChevronDownOutline } from "react-icons/io5";
+import {
+  IoArrowRedoOutline,
+  IoChevronUpOutline,
+  IoChevronDownOutline,
+} from "react-icons/io5";
 import { useSelector } from "react-redux";
 
 /* ---------------- STYLES ---------------- */
@@ -30,13 +35,6 @@ const ShortCard = styled.div`
   border-radius: 20px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-
-  @media (max-width: 700px) {
-    height: 100vh;
-    margin-top: 0;
-    border-radius: 0;
-  }
 `;
 
 const VideoFrame = styled.video`
@@ -49,44 +47,16 @@ const VideoFrame = styled.video`
   }
 `;
 
+/* 👉 Tap zones for 10 sec seek */
 const SeekOverlay = styled.div`
   position: absolute;
   inset: 0;
   display: flex;
-  z-index: 15;
+  z-index: 10;
 `;
 
 const SeekZone = styled.div`
   flex: 1;
-`;
-
-const GradientOverlay = styled.div`
-  position: absolute;
-  bottom: 0;
-  height: 35%;
-  width: 100%;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
-  pointer-events: none;
-`;
-
-const InfoOverlay = styled.div`
-  position: absolute;
-  bottom: 25px;
-  left: 20px;
-  color: white;
-  z-index: 20;
-  max-width: 75%;
-`;
-
-const Title = styled.h3`
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 800;
-`;
-
-const Desc = styled.p`
-  font-size: 0.9rem;
-  opacity: 0.8;
 `;
 
 const RightOverlay = styled.div`
@@ -95,9 +65,8 @@ const RightOverlay = styled.div`
   bottom: 80px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   z-index: 20;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
 `;
 
 const ActionButton = styled.div`
@@ -105,18 +74,12 @@ const ActionButton = styled.div`
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  color: ${({ theme }) => theme.text};
+  color: white;
 
   span {
     font-size: 11px;
     font-weight: 700;
-    color: ${({ theme }) => theme.textSoft};
-  }
-
-  &:hover {
-    color: #0077ff;
-    transform: translateY(-2px);
-    transition: 0.2s;
+    opacity: 0.8;
   }
 `;
 
@@ -128,13 +91,6 @@ const NavContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 15px;
-
-  @media (max-width: 1100px) {
-    right: 20px;
-    background: rgba(0,0,0,0.2);
-    padding: 10px;
-    border-radius: 50px;
-  }
 `;
 
 const ArrowBtn = styled.div`
@@ -147,12 +103,6 @@ const ArrowBtn = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border: 1px solid ${({ theme }) => theme.soft};
-
-  &:hover {
-    background: #0077ff;
-    color: white;
-  }
 `;
 
 /* ---------------- COMPONENT ---------------- */
@@ -160,102 +110,188 @@ const ArrowBtn = styled.div`
 const ShortsVideoPage = () => {
   const [videos, setVideos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const videoRefs = useRef([]);
-  const { currentUser } = useSelector((state) => state.user);
+  const [isPlaying, setIsPlaying] = useState(true);
+   const { currentUser } = useSelector((state) => state.user);
 
+  const isSaved = videos.savedBy?.includes(currentUser?._id);
+
+  const videoRefs = useRef([]);
+ 
   useEffect(() => {
-    api.get("/videos/type/shorts")
-      .then(res => setVideos(res.data))
-      .catch(err => console.log(err));
+    api.get("/videos/type/shorts").then((res) => setVideos(res.data));
   }, []);
 
   useEffect(() => {
     videoRefs.current.forEach((vid, idx) => {
       if (!vid) return;
       if (idx === currentIndex) {
-        vid.play().catch(() => {
-          vid.muted = true;
-          vid.play();
-        });
+        vid.play();
+        setIsPlaying(true);
       } else {
         vid.pause();
       }
     });
   }, [currentIndex, videos]);
 
-  const seekBackward = (vid) => {
-    if (!vid) return;
-    vid.currentTime = Math.max(vid.currentTime - 10, 0);
+  /* ================= ACTIONS ================= */
+
+  const handleLike = async (id) => {
+    if (!currentUser) return alert("Login first");
+    await api.put(`/users/like/${id}`);
+    updateLocal(id, "likes");
   };
 
-  const seekForward = (vid) => {
-    if (!vid) return;
-    vid.currentTime = Math.min(vid.currentTime + 10, vid.duration);
+  const handleDislike = async (id) => {
+    if (!currentUser) return alert("Login first");
+    await api.put(`/users/dislike/${id}`);
+    updateLocal(id, "dislikes");
   };
+
+  const handleSave = async (id) => {
+    if (!currentUser) return alert("Login first");
+
+    const res = await api.put(`/users/save/${id}`);
+
+    setVideos((prev) =>
+      prev.map((v) =>
+        v._id === id
+          ? { ...v, savedBy: Array(res.data.savedByCount).fill("x") }
+          : v
+      )
+    );
+  };
+
+
+
+  const handleShare = async (id) => {
+    await api.put(`/users/share/${id}`);
+    navigator.clipboard.writeText(window.location.href);
+    alert("Link copied");
+  };
+
+  /* ================= PLAY / PAUSE ================= */
+
+  const togglePlay = () => {
+    const vid = videoRefs.current[currentIndex];
+    if (!vid) return;
+
+    if (vid.paused) {
+      vid.play();
+      setIsPlaying(true);
+    } else {
+      vid.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  /* ================= SEEK ================= */
+
+  const seekBackward = () => {
+    const vid = videoRefs.current[currentIndex];
+    if (vid) vid.currentTime = Math.max(vid.currentTime - 10, 0);
+  };
+
+  const seekForward = () => {
+    const vid = videoRefs.current[currentIndex];
+    if (vid) vid.currentTime = Math.min(vid.currentTime + 10, vid.duration);
+  };
+
+  /* ================= LOCAL UPDATE ================= */
+
+  const updateLocal = (videoId, type) => {
+    setVideos((prev) =>
+      prev.map((v) => {
+        if (v._id !== videoId) return v;
+        const uid = currentUser._id;
+
+        if (type === "likes") {
+          v.likes = v.likes.includes(uid)
+            ? v.likes.filter((i) => i !== uid)
+            : [...v.likes, uid];
+          v.dislikes = v.dislikes.filter((i) => i !== uid);
+        }
+
+        if (type === "dislikes") {
+          v.dislikes = v.dislikes.includes(uid)
+            ? v.dislikes.filter((i) => i !== uid)
+            : [...v.dislikes, uid];
+          v.likes = v.likes.filter((i) => i !== uid);
+        }
+        return { ...v };
+      })
+    );
+  };
+
+  /* ================= UI ================= */
 
   return (
     <Container>
       <div style={{ position: "relative" }}>
-        {videos.map((video, index) => (
-          <ShortCard
-            key={video._id}
-            style={{ display: index === currentIndex ? "block" : "none" }}
-          >
-            <VideoFrame
-              ref={(el) => (videoRefs.current[index] = el)}
-              src={video.videoUrl}
-              loop
-              muted
-              playsInline
-              controls={false}
-            />
+        {videos.map(
+          (video, index) =>
+            index === currentIndex && (
+              <ShortCard key={video._id}>
+                <VideoFrame
+                  ref={(el) => (videoRefs.current[index] = el)}
+                  src={video.videoUrl}
+                  loop
+                  playsInline
+                />
 
-            {/* TAP ZONES */}
-            <SeekOverlay>
-              <SeekZone onClick={() => seekBackward(videoRefs.current[index])} />
-              <SeekZone
-                onClick={() => {
-                  const vid = videoRefs.current[index];
-                  vid.paused ? vid.play() : vid.pause();
-                }}
-              />
-              <SeekZone onClick={() => seekForward(videoRefs.current[index])} />
-            </SeekOverlay>
+                {/* 🔥 10 sec tap zones */}
+                <SeekOverlay>
+                  <SeekZone onClick={seekBackward} />
+                  <SeekZone onClick={togglePlay} />
+                  <SeekZone onClick={seekForward} />
+                </SeekOverlay>
 
-            <GradientOverlay />
+                <RightOverlay>
+                  <ActionButton onClick={() => handleLike(video._id)}>
+                    <MdThumbUp size={28} />
+                    <span>{video.likes?.length || 0}</span>
+                  </ActionButton>
 
-            <InfoOverlay>
-              <Title>{video.title}</Title>
-              <Desc>{video.desc}</Desc>
-            </InfoOverlay>
+                  <ActionButton onClick={() => handleDislike(video._id)}>
+                    <MdThumbDown size={28} />
+                    <span>{video.dislikes?.length || 0}</span>
+                  </ActionButton>
 
-            <RightOverlay>
-              <ActionButton>
-                <MdThumbUp size={28} />
-                <span>{video.likes?.length || 0}</span>
-              </ActionButton>
-              <ActionButton>
-                <MdThumbDown size={28} />
-                <span>Dislike</span>
-              </ActionButton>
-              <ActionButton>
-                <MdOutlineAddTask size={28} />
-                <span>Save</span>
-              </ActionButton>
-              <ActionButton>
-                <IoArrowRedoOutline size={28} />
-                <span>Share</span>
-              </ActionButton>
-            </RightOverlay>
-          </ShortCard>
-        ))}
+                  <ActionButton onClick={togglePlay}>
+                    {isPlaying ? (
+                      <MdPause size={30} />
+                    ) : (
+                      <MdPlayArrow size={30} />
+                    )}
+                    <span>{isPlaying ? "Pause" : "Play"}</span>
+                  </ActionButton>
+
+                  <ActionButton onClick={() => handleSave(video._id)}>
+                    <MdOutlineAddTask
+                      size={28}
+                      color={isSaved ? "#3ea6ff" : "white"}
+                    />
+                    <span>{video.savedBy?.length || 0}</span>
+                  </ActionButton>
+
+                  <ActionButton onClick={() => handleShare(video._id)}>
+                    <IoArrowRedoOutline size={28} />
+                    <span>{video.share?.length || 0}</span>
+                  </ActionButton>
+                </RightOverlay>
+              </ShortCard>
+            )
+        )}
 
         <NavContainer>
-          <ArrowBtn onClick={() => setCurrentIndex(i => Math.max(i - 1, 0))}>
-            <IoChevronUpOutline size={24} />
+          <ArrowBtn onClick={() => setCurrentIndex((i) => Math.max(i - 1, 0))}>
+            <IoChevronUpOutline />
           </ArrowBtn>
-          <ArrowBtn onClick={() => setCurrentIndex(i => Math.min(i + 1, videos.length - 1))}>
-            <IoChevronDownOutline size={24} />
+          <ArrowBtn
+            onClick={() =>
+              setCurrentIndex((i) => Math.min(i + 1, videos.length - 1))
+            }
+          >
+            <IoChevronDownOutline />
           </ArrowBtn>
         </NavContainer>
       </div>

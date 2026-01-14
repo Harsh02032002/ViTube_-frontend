@@ -11,64 +11,92 @@ import Menu from './Menu';
 const Container = styled.div`
   position: sticky;
   top: 0;
-  z-index: 999;
-  color: ${({ theme }) => theme.text};
-  background-color: ${({ theme }) => theme.bgLighter};
-  height: 70px; // Standard premium height
-  border-bottom: 1px solid ${({ theme }) => theme.soft};
-  backdrop-filter: blur(10px); // Glassmorphism effect
+  
+  width: 100%;
+  z-index: 1000;
+  background-color: rgba(248, 250, 252, 0.9); // Calm Light BG
+  height: 80px; 
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid ${({ theme }) => theme.soft + "20"};
+  display: flex;
+  align-items: center;
+  justify-content: center; // This helps in centering the search
 `;
 
 const Wrapper = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  width: 100%;
   height: 100%;
-  padding: 0 24px;
-  max-width: 1800px;
-  margin: 0 auto;
+  position: relative; // This is the anchor for absolute elements
+  padding: 0 30px; // Overall horizontal breathing space
 `;
 
 const Left = styled.div`
+  position: absolute;
+  left: 0; // LOGO FIXED AT FAR LEFT
   display: flex;
   align-items: center;
-  gap: 15px;
+  padding-left: 20px; // Left se thoda margin
+  
+  a {
+    text-decoration: none;
+  }
 `;
 
 const Logo = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 900;
-  font-size: 20px;
-  letter-spacing: -1px;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 22px;
+  color: #1e293b;
   cursor: pointer;
-  text-decoration: none;
-  color: ${({ theme }) => theme.text};
-  span { color: #0077ff; }
+  span { 
+    background: linear-gradient(135deg, #0077ff, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 `;
 
 const SearchContainer = styled.div`
-  flex: 0.5;
+  /* THE MAGIC CENTER LOGIC */
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%); // PERFECT CENTER
+  
+  width: 100%;
+  max-width: 500px; // Deskptop par ek fixed size rahega
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 18px;
-  background-color: ${({ theme }) => theme.bg}; // Slightly darker than navbar
-  border-radius: 50px; // Pill shape
-  border: 1px solid ${({ theme }) => theme.soft};
+  padding: 10px 20px;
+  background-color: #ffffff;
+  border-radius: 50px; // Pill Shape
+  border: 1px solid rgba(0, 119, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
 
   &:focus-within {
+    max-width: 550px;
     border-color: #0077ff;
-    box-shadow: 0 0 0 2px rgba(0, 119, 255, 0.2);
-    flex: 0.6; // Expands slightly on focus
+    box-shadow: 0 8px 25px rgba(0, 119, 255, 0.1);
   }
 
-  @media only screen and (max-width: 700px) {
-    display: none; // Hide on small mobile to show only icon
+  @media only screen and (max-width: 768px) {
+    display: none; 
   }
 `;
+
+const Right = styled.div`
+  position: absolute;
+  right: 0; // PROFILE FIXED AT FAR RIGHT
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-right: 20px; // Right se thoda margin
+`;
+
 
 const Input = styled.input`
   width: 100%;
@@ -80,11 +108,7 @@ const Input = styled.input`
   &::placeholder { color: #666; font-weight: 500; }
 `;
 
-const Right = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
-`;
+
 
 const User = styled.div`
   display: flex;
@@ -95,14 +119,19 @@ const User = styled.div`
 `;
 
 const Avatar = styled.img`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #333;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px; // Modern squircle instead of circle
+  background-color: #f1f5f9;
   object-fit: cover;
   border: 2px solid transparent;
   cursor: pointer;
-  &:hover { border-color: #0077ff; }
+  transition: 0.3s;
+
+  &:hover {
+    border-color: #0077ff;
+    transform: scale(1.05);
+  }
 `;
 
 const IconButton = styled.div`
@@ -115,19 +144,24 @@ const IconButton = styled.div`
 `;
 
 const Button = styled.button`
-  padding: 8px 18px;
-  background-color: #0077ff;
-  border: none;
-  color: white;
-  border-radius: 50px;
+  padding: 10px 22px;
+  background: transparent;
+  border: 2px solid #0077ff;
+  color: #0077ff;
+  border-radius: 100px;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   transition: 0.3s;
-  &:hover { background-color: #0062d1; transform: translateY(-1px); }
+
+  &:hover {
+    background-color: #0077ff;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 119, 255, 0.3);
+  }
 `;
 
 const Navbar = ({ darkMode, setDarkMode }) => {

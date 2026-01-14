@@ -186,22 +186,27 @@ const Video = () => {
       : await api.put(`/users/sub/${channel._id}`);
     dispatch(subscription(channel._id));
   };
-  const handleSave = async (video) => {
+  const handleSave = async () => {
     if (!currentUser) return alert("Please login first");
+
     try {
-      await api.put(
-        `/users/save/${video._id}`,
-        {},
-        {
-          headers: { token: `Bearer ${currentUser.accessToken}` },
-        }
+      const res = await api.put(`/users/save/${currentVideo._id}`);
+
+      // 🔥 UPDATE redux video state
+      dispatch(
+        fetchSuccess({
+          ...currentVideo,
+          savedBy: res.data.saved
+            ? [...(currentVideo.savedBy || []), currentUser._id]
+            : currentVideo.savedBy.filter((id) => id !== currentUser._id),
+        })
       );
-      alert("Video saved!");
     } catch (err) {
       console.log(err);
       alert("Error saving video");
     }
   };
+
 
   const handleShare = async () => {
     if (!currentUser) return;
@@ -247,8 +252,9 @@ const Video = () => {
             <Button onClick={handleShare}>
               <MdOutlineReply /> Share ({shareCount})
             </Button>
-            <Button onClick={() => handleSave(currentVideo)}>
-              <MdOutlineAddTask /> Save
+            <Button onClick={handleSave}>
+              <MdOutlineAddTask />
+              Save ({currentVideo?.savedBy?.length || 0})
             </Button>
           </Buttons>
         </Details>
