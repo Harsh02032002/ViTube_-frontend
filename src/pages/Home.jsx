@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import Card from "../components/Card";
-import axios from "axios";
+import api from "../utils/api";
+
 import LoadingComp from "../components/LoadingComp";
 import Tags from "../components/Tags";
 import { fetchAllSuccess } from "../redux/videosSlice";
@@ -57,7 +58,7 @@ const Home = ({ type }) => {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const res = await axios.get(`/videos/${type}`);
+        const res = await api.get(`/videos/${type}`);
 
         // ✅ SAFE: force array only
         const videos = Array.isArray(res.data)
@@ -76,7 +77,7 @@ const Home = ({ type }) => {
 
     const fetchTags = async () => {
       try {
-        const res = await axios.get(`/videos/tags/all`);
+        const res = await api.get(`/videos/tags/all`);
         setTags(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.log(err);

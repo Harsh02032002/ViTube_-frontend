@@ -1,4 +1,5 @@
-import axios from "axios";
+import api from "../utils/api";
+
 import React, { useEffect, useState } from "react";
 import { MdOutlineDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
@@ -25,46 +26,45 @@ const Details = styled.div`
   color: ${({ theme }) => theme.text};
 `;
 const Name = styled.span`
-font-size: 13px;
-font-weight: 500;
+  font-size: 13px;
+  font-weight: 500;
 `;
 
 const Date = styled.span`
-font-size: 12px;
-font-weight: 400;
-color: ${({ theme }) => theme.textSoft};
-margin-left: 5px;
+  font-size: 12px;
+  font-weight: 400;
+  color: ${({ theme }) => theme.textSoft};
+  margin-left: 5px;
 `;
 const ShowMore = styled.span`
-cursor: pointer;
-padding: 0 10px;
+  cursor: pointer;
+  padding: 0 10px;
 `;
 const Text = styled.span`
-font-size: 14px;
+  font-size: 14px;
 `;
 
-
-const Comment = ({ comment,videoId,setComments }) => {
+const Comment = ({ comment, videoId, setComments }) => {
   const { currentUser } = useSelector((state) => state.user);
 
   const [channel, setChannel] = useState({});
 
   useEffect(() => {
     const fetchComment = async () => {
-      const res = await axios.get(`/users/find/${comment.userId}`);
-      setChannel(res.data)
+      const res = await api.get(`/users/find/${comment.userId}`);
+      setChannel(res.data);
     };
     fetchComment();
   }, [comment.userId]);
   const handleDelete = async (e) => {
     e.preventDefault();
     try {
-      await axios.delete(`/comments/${comment._id}`);
-      fetchComments(videoId,setComments);
+      await api.delete(`/comments/${comment._id}`);
+      fetchComments(videoId, setComments);
     } catch (error) {
       console.log(error);
     }
-  }
+  };
   return (
     <Container>
       <Avatar src={channel?.img} />
@@ -75,10 +75,10 @@ const Comment = ({ comment,videoId,setComments }) => {
         <Text>{comment?.desc}</Text>
       </Details>
       {currentUser && currentUser._id === comment.userId ? (
-      <ShowMore onClick={handleDelete}>
-        <MdOutlineDelete />
-      </ShowMore>)
-      : null}
+        <ShowMore onClick={handleDelete}>
+          <MdOutlineDelete />
+        </ShowMore>
+      ) : null}
     </Container>
   );
 };

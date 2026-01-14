@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
+
 import VideoCard from "../components/Card";
 import styled from "styled-components";
 import { useParams } from "react-router-dom";
@@ -17,7 +18,7 @@ const Category = () => {
 
   useEffect(() => {
     const fetchVideos = async () => {
-      const res = await axios.get(`/videos/type/${type}`);
+      const res = await api.get(`/videos/type/${type}`);
       setVideos(res.data);
     };
     fetchVideos();

@@ -1,4 +1,5 @@
-import axios from "axios";
+import api from "../utils/api";
+
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { SPACING } from "../constants";
@@ -8,8 +9,8 @@ const Container = styled.div`
   flex: 2;
   @media only screen and (max-width: 700px) {
     display: block;
-  margin-top: ${SPACING.l}px;
-      }
+    margin-top: ${SPACING.l}px;
+  }
 `;
 
 const Recommendation = ({ tags }) => {
@@ -17,7 +18,7 @@ const Recommendation = ({ tags }) => {
 
   useEffect(() => {
     const fetchVideos = async () => {
-      const res = await axios.get(`/videos/tags?tags=${tags}`);
+      const res = await api.get(`/videos/tags?tags=${tags}`);
       setVideos(res.data);
     };
     fetchVideos();

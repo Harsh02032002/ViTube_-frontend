@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { SPACING } from "../constants";
-import axios from "axios";
+import api from "../utils/api";
+
 import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
@@ -115,7 +116,7 @@ const Upload = ({ setOpen }) => {
       formData.append("video", videoFile);
       formData.append("img", imageFile);
 
-      const res = await axios.post("/videos", formData, {
+      const res = await api.post("/videos", formData, {
         headers: {
           "Authorization": `Bearer ${token}`, // JWT added here
           "Content-Type": "multipart/form-data"

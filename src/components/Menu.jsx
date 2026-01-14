@@ -12,7 +12,8 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/userSlice";
-import axios from "axios";
+import api from "../utils/api";
+
 
 const Container = styled.div`
   flex: 1.1;
@@ -100,7 +101,7 @@ const Menu = ({ darkMode, setDarkMode, type }) => {
 
   const logOut = async () => {
     try {
-      await axios.post(`/auth/signout`);
+      await api.post(`/auth/signout`);
       localStorage.removeItem("persist:root");
       dispatch(logout());
       navigate("/");

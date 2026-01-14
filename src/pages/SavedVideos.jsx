@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import axios from "axios";
+import api from "../utils/api";
+
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { SPACING, SIZES } from "../constants";
@@ -45,7 +46,7 @@ const SavedVideos = () => {
   useEffect(() => {
     const fetchSavedVideos = async () => {
       try {
-        const res = await axios.get("/users/saved", {
+        const res = await api.get("/users/saved", {
   headers: { token: `Bearer ${currentUser.accessToken}` },
 });
 

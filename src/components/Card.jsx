@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { SIZES, SPACING } from '../constants';
 import timeago from 'timeago.js';
-
-
-import axios from 'axios';
+import api from "../utils/api";
 import LoadingComp from './LoadingComp';
 
 const Container = styled.div`
@@ -72,7 +70,7 @@ const Card = ({ type, video }) => {
     useEffect(() => {
         const fetchChannel = async () => {
             try {
-                const res = await axios.get(`/users/find/${video.userId}`);
+                const res = await api.get(`/users/find/${video.userId}`);
                 setChannel(res.data);
                 setLoading(false);
             } catch (err) {
