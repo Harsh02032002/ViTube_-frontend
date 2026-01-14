@@ -182,7 +182,7 @@ const Upload = ({ setOpen }) => {
       !inputs.desc ||
       !inputs.type
     ) {
-      alert("Oye, saare fields bhar de pehle!");
+      alert("Please fill all the fields and select files!");
       return;
     }
 
