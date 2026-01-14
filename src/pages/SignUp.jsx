@@ -1,6 +1,5 @@
 import api from "../utils/api";
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { SIZES, SPACING } from "../constants";
@@ -9,14 +8,17 @@ import { auth, provider } from "../firebase";
 import { signInWithPopup } from "firebase/auth";
 import { Link, useNavigate } from "react-router-dom";
 import ToastNotification from "../components/ToastNotification";
+import { FcGoogle } from "react-icons/fc";
+
+/* ================= PREMIUM STYLES ================= */
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: calc(100vh - ${SPACING.m * 6}px);
-  margin: ${SPACING.s}px 0;
+  min-height: calc(100vh - 100px);
+  padding: 20px 0;
   color: ${({ theme }) => theme.text};
 `;
 
@@ -25,53 +27,111 @@ const Wrapper = styled.div`
   align-items: center;
   flex-direction: column;
   background-color: ${({ theme }) => theme.bgLighter};
-  border: 1px solid ${({ theme }) => theme.soft};
-  padding: ${SPACING.m}px ${SPACING.xl}px;
-  gap: ${SPACING.m}px;
+  border: 1px solid ${({ theme }) => theme.soft + "30"};
+  padding: 40px 50px;
+  gap: 15px;
+  border-radius: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 420px;
 `;
 
 const Title = styled.h1`
-  font-size: ${SIZES.extraLarge}px;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: -5px;
 `;
 
 const SubTitle = styled.h2`
-  font-size: ${SIZES.large}px;
+  font-size: 15px;
+  font-weight: 400;
+  color: ${({ theme }) => theme.textSoft};
+  margin-bottom: 10px;
+  text-align: center;
 `;
 
 const Input = styled.input`
   border: 1px solid ${({ theme }) => theme.soft};
   color: ${({ theme }) => theme.text};
-  border-radius: ${SPACING.xs}px;
-  padding: ${SPACING.s}px;
+  border-radius: 12px;
+  padding: 14px;
   width: 100%;
   outline: none;
-  background-color: transparent;
+  background-color: ${({ theme }) => theme.bg};
+  font-size: 14px;
+  transition: all 0.3s ease;
+
+  &:focus {
+    border-color: #0077ff;
+    box-shadow: 0 0 0 4px rgba(0, 119, 255, 0.1);
+  }
 `;
 
 const Button = styled.button`
-  border-radius: ${SPACING.xs}px;
+  border-radius: 12px;
   border: none;
-  padding: ${SPACING.m}px ${SPACING.xl}px;
-  font-weight: 500;
+  padding: 15px;
+  width: 100%;
+  font-weight: 700;
   cursor: pointer;
-  background-color: ${({ theme }) => theme.soft};
-  color: ${({ theme }) => theme.textSoft};
+  background: linear-gradient(135deg, #0077ff 0%, #00a2ff 100%);
+  color: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0, 119, 255, 0.2);
+  margin-top: 5px;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 25px rgba(0, 119, 255, 0.3);
+  }
+
+  &:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+  }
+`;
+
+const GoogleButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.soft};
+  background-color: white;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+
+  &:hover {
+    background-color: #f8fafc;
+  }
 `;
 
 const More = styled.div`
   display: flex;
-  margin-top: ${SPACING.s}px;
-  font-size: ${SIZES.small}px;
+  margin-top: 30px;
+  font-size: 12px;
   color: ${({ theme }) => theme.textSoft};
 `;
 
 const Links = styled.div`
-  margin-left: ${SPACING.xl}px;
+  margin-left: 50px;
+  display: flex;
+  gap: 15px;
 `;
 
 const LinkIt = styled.span`
-  margin-left: ${SPACING.l}px;
+  cursor: pointer;
+  &:hover {
+    color: #0077ff;
+  }
 `;
+
+/* ================= COMPONENT ================= */
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -82,66 +142,66 @@ const SignUp = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { error } = useSelector((state) => state.user);
+  const { error, loading } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    return () => {
+      dispatch(signupFailure(null));
+    };
+  }, [dispatch]);
 
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
   const signInWithGoogle = async () => {
     dispatch(signupStart());
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        const username =
-          result.user.displayName.split(" ").join("").toLowerCase() +
-          Math.floor(Math.random() * 90 + 10);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const tempUsername =
+        result.user.displayName.split(" ").join("").toLowerCase() +
+        Math.floor(Math.random() * 90 + 10);
 
-        api
-          .post(`/auth/google`, {
-            name: result.user.displayName,
-            username,
-            email: result.user.email,
-            img: result.user.photoURL,
-          })
-          .then((res) => {
-            dispatch(signupSuccess(res.data));
-            navigate("/");
-          });
-      })
-      .catch((err) => {
-        dispatch(
-          signupFailure(err?.response?.data?.message || "Google sign-in failed")
-        );
+      const res = await api.post(`/auth/google`, {
+        name: result.user.displayName,
+        username: tempUsername,
+        email: result.user.email,
+        img: result.user.photoURL,
       });
+
+      dispatch(signupSuccess(res.data));
+      navigate("/");
+    } catch (err) {
+      dispatch(
+        signupFailure(err?.response?.data?.message || "Google sign-in failed")
+      );
+    }
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
-
     if (!name || !username || !email || !password) {
-      dispatch(signupFailure("Please fill all the fields"));
+      dispatch(signupFailure("Please fill all fields"));
       return;
     }
-
     if (!isValidEmail(email)) {
-      dispatch(signupFailure("Please provide a valid email"));
+      dispatch(signupFailure("Invalid email format"));
       return;
     }
 
     dispatch(signupStart());
-
     try {
-      const img =
+      const defaultImg =
         "https://uploads.commoninja.com/searchengine/wordpress/adorable-avatars.png";
       const response = await api.post(`/auth/signup`, {
         name,
         username,
         email,
-        img,
+        img: defaultImg,
         password,
       });
 
       if (response.status === 201) {
         setMsg(response.data.message);
-        dispatch(signupSuccess(null)); // error clear
+        dispatch(signupSuccess(null));
       }
     } catch (err) {
       dispatch(signupFailure(err?.response?.data?.message || "Signup failed"));
@@ -154,48 +214,56 @@ const SignUp = () => {
       {msg && <ToastNotification type="success" message={msg} />}
 
       <Wrapper>
-        <Title>Sign Up</Title>
-        <SubTitle>to continue your YouTube account</SubTitle>
+        <Title>Create Account</Title>
+        <SubTitle>Join the community today</SubTitle>
 
         <Input
-          placeholder="name"
+          placeholder="Full Name"
           onChange={(e) => {
             setName(e.target.value);
-            dispatch(signupFailure(""));
+            dispatch(signupFailure(null));
           }}
         />
-
         <Input
-          placeholder="username"
+          placeholder="Username"
           onChange={(e) => {
             setUsername(e.target.value);
-            dispatch(signupFailure(""));
+            dispatch(signupFailure(null));
           }}
         />
-
         <Input
+          placeholder="Email Address"
           type="email"
-          placeholder="email"
           onChange={(e) => {
             setEmail(e.target.value);
-            dispatch(signupFailure(""));
+            dispatch(signupFailure(null));
           }}
         />
-
         <Input
+          placeholder="Password"
           type="password"
-          placeholder="password"
           onChange={(e) => {
             setPassword(e.target.value);
-            dispatch(signupFailure(""));
+            dispatch(signupFailure(null));
           }}
         />
 
-        <Button onClick={handleSignup}>Sign Up</Button>
+        <Button onClick={handleSignup} disabled={loading}>
+          {loading ? "Creating Account..." : "Sign Up"}
+        </Button>
 
-        <SubTitle>Or</SubTitle>
-        <Link to="/signin" style={{ textDecoration: "none", color: "inherit" }}>
-          Login to an account
+        
+
+        <Link
+          to="/signin"
+          style={{
+            textDecoration: "none",
+            color: "#0077ff",
+            fontWeight: "600",
+            marginTop: "10px",
+          }}
+        >
+          Already have an account? Login
         </Link>
       </Wrapper>
 
